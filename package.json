@@ -45,7 +45,6 @@
     "verify": "node scripts/verify-bundle.mjs && node scripts/verify-rescue.mjs",
     "verify:install": "node scripts/verify-install.mjs",
     "install:local": "node scripts/pack-and-install.mjs",
-    "diagnose": "node scripts/diagnose-install.mjs",
     "prepack": "node scripts/bundle-client.mjs"
   },
   "dsh": {

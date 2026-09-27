@@ -170,13 +170,15 @@ dsh plugin --profile web add https://gh-proxy.com/https://github.com/MYCF711/dsh
 
 `pnpm` 在部分 profile 配置下会崩溃 —— 实测于 pnpm 12.4.2 + hoisted linker + 体积较大的包，报 `memory allocation of 21474836480 bytes failed`。崩完之后，下面三条记录经常互相矛盾，而退出码看起来却是正常的。
 
-三方对账：
+用 [dsh-plugin-toolkit](https://github.com/MYCF711/dsh-plugin-toolkit) 三方对账：
 
 ```powershell
-npm run diagnose
+node diagnose-install.mjs --profile web
 ```
 
 它会比对 `package.json` 的依赖声明、`pnpm-lock.yaml` 的解析记录、以及 `node_modules` 里实际存在的东西（包括装的是实体目录还是符号链接），不一致时直接打印修复步骤。
+
+根因是 pnpm 的缺陷，上游已在 **12.7.0** 修复。若出现该症状，先查 pnpm 版本：[dsh-plugin-doctor](https://github.com/MYCF711/dsh-plugin-doctor) 会在启动时锁定可用版本。
 
 ### 生效条件
 
@@ -223,11 +225,12 @@ node scripts/bundle-client.mjs --entry src/client.js --out lib/client.js
 └── scripts/
     ├── bundle-client.mjs     # 零依赖客户端打包器
     ├── pack-and-install.mjs  # 构建 → 验证 → 打包 → 安装，一步到位
-    ├── diagnose-install.mjs  # 声明 / lockfile / node_modules 三方对账
     ├── verify-bundle.mjs     # 13 项契约检查
     ├── verify-rescue.mjs     # 8 项端到端行为检查
     └── verify-install.mjs    # 15 项安装态检查
 ```
+
+通用的插件装载诊断工具在另一个仓库：[dsh-plugin-toolkit](https://github.com/MYCF711/dsh-plugin-toolkit)。它们与本插件的用途无关，因此不在此重复保留。
 
 `lib/` 是**故意**提交的：运行时直接消费构建产物，而 DSH 对插件没有安装期构建步骤。
 

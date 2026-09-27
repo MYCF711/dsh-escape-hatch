@@ -170,13 +170,15 @@ dsh plugin --profile web add https://gh-proxy.com/https://github.com/MYCF711/dsh
 
 `pnpm` can crash on some profile configurations — observed on pnpm 12.4.2 with a hoisted linker and larger packages, aborting with `memory allocation of 21474836480 bytes failed`. After such a crash the three records below frequently end up contradicting each other while the exit code still looks clean.
 
-Check all three against each other:
+Check all three against each other with [dsh-plugin-toolkit](https://github.com/MYCF711/dsh-plugin-toolkit):
 
 ```powershell
-npm run diagnose
+node diagnose-install.mjs --profile web
 ```
 
 It compares the dependency declaration in `package.json`, the resolution entry in `pnpm-lock.yaml`, and what actually exists under `node_modules` — including whether the installed copy is a real directory or a symlink — then prints the exact repair sequence when they disagree.
+
+The root cause is a pnpm defect, fixed upstream in **12.7.0**. If the symptom appears, check the pnpm version first: [dsh-plugin-doctor](https://github.com/MYCF711/dsh-plugin-doctor) pins a working one at startup.
 
 ### Activation requirement
 
@@ -223,11 +225,12 @@ The registration `id` is read from `package.json`, so the bundle stays in sync w
 └── scripts/
     ├── bundle-client.mjs     # zero-dependency client bundler
     ├── pack-and-install.mjs  # build → verify → pack → install, one step
-    ├── diagnose-install.mjs  # declaration / lockfile / node_modules reconciliation
     ├── verify-bundle.mjs     # 13 contract checks
     ├── verify-rescue.mjs     # 8 end-to-end behavior checks
     └── verify-install.mjs    # 15 installed-state checks
 ```
+
+Generic plugin-loading diagnostics live in a separate repository, [dsh-plugin-toolkit](https://github.com/MYCF711/dsh-plugin-toolkit) — they have nothing to do with this plugin's purpose and are not duplicated here.
 
 `lib/` is committed on purpose: the runtime consumes built artifacts directly, and DSH has no install-time build step for plugins.
 
