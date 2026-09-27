@@ -125,20 +125,58 @@ function startupDiagnostic(binName, failures, required) { /* ... */ }
 
 ## 安装
 
+### 推荐：从源码构建并安装
+
 ```powershell
-# 1. 放进 profile 的 node_modules
-$profile = "$env:APPDATA\in.dsh-plug.dsh-launcher\homes\<版本号>\profiles\web"
-Copy-Item . "$profile\node_modules\dsh-escape-hatch" -Recurse
+npm run install:local                          # profile 默认 web
+npm run install:local -- --profile tui
 ```
 
-```yaml
-# 2. 在 profile 的 cordis.patch.yml 里注册
-- insert:
-    - id: escape-hatch
-      name: 'dsh-escape-hatch'
+一条命令跑完全流程 —— 从 `src/` 重建 `lib/`、跑完全部验证、打成 tarball、装进 profile。**每次改完源码都用它。**
+
+### 手动安装
+
+```powershell
+# 1. 打包
+npm pack
+
+# 2. 装进 profile
+dsh plugin --profile web add "C:\路径\dsh-escape-hatch-1.0.0.tgz"
 ```
 
-重启 DSH web 服务并刷新页面。
+然后重启 DSH web 服务并刷新页面。
+
+### 不要改已安装的那份
+
+直接编辑 `profile\node_modules\dsh-escape-hatch\lib\...` 来修 bug **不会留存**。下一次 `dsh plugin install` 或重建 profile 会把它覆盖掉，修复悄无声息地失效。
+
+这条工作流的正解永远是：
+
+- 改**源头**（`src/`，或上游依赖），
+- 重新构建并重装（`npm run install:local`），
+- 或者用 `file:` 把依赖指向本地打过补丁的源。
+
+### 锁定明确版本
+
+安装时给出明确版本号。**不要**留下 caret 范围（`^1.0.0`）—— 范围可能把含修复的那个版本挡在门外，这正是 `^0.6.11` 踩过的坑。
+
+按 tag 安装：
+
+```powershell
+dsh plugin --profile web add https://gh-proxy.com/https://github.com/MYCF711/dsh-escape-hatch/releases/download/v1.0.0/dsh-escape-hatch-1.0.0.tgz
+```
+
+### 安装行为异常时
+
+`pnpm` 在部分 profile 配置下会崩溃 —— 实测于 pnpm 12.4.2 + hoisted linker + 体积较大的包，报 `memory allocation of 21474836480 bytes failed`。崩完之后，下面三条记录经常互相矛盾，而退出码看起来却是正常的。
+
+三方对账：
+
+```powershell
+npm run diagnose
+```
+
+它会比对 `package.json` 的依赖声明、`pnpm-lock.yaml` 的解析记录、以及 `node_modules` 里实际存在的东西（包括装的是实体目录还是符号链接），不一致时直接打印修复步骤。
 
 ### 生效条件
 
@@ -184,8 +222,11 @@ node scripts/bundle-client.mjs --entry src/client.js --out lib/client.js
 │   └── index.js
 └── scripts/
     ├── bundle-client.mjs     # 零依赖客户端打包器
+    ├── pack-and-install.mjs  # 构建 → 验证 → 打包 → 安装，一步到位
+    ├── diagnose-install.mjs  # 声明 / lockfile / node_modules 三方对账
     ├── verify-bundle.mjs     # 13 项契约检查
-    └── verify-rescue.mjs     # 8 项端到端行为检查
+    ├── verify-rescue.mjs     # 8 项端到端行为检查
+    └── verify-install.mjs    # 15 项安装态检查
 ```
 
 `lib/` 是**故意**提交的：运行时直接消费构建产物，而 DSH 对插件没有安装期构建步骤。

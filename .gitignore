@@ -21,3 +21,8 @@ desktop.ini
 # NOTE: lib/ is intentionally NOT ignored.
 # The DSH runtime consumes built artifacts directly and has no install-time
 # build step for plugins, so the bundled client must be committed.
+
+# Packed tarballs and local npm cache (build artifacts, not sources)
+*.tgz
+.npm-cache/
+

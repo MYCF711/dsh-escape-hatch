@@ -125,20 +125,58 @@ Runtime footprint: ~14 KB of JavaScript, plus two wrapped function references. T
 
 ## Installation
 
+### Recommended: build and install from source
+
 ```powershell
-# 1. Place the package inside your profile's node_modules
-$profile = "$env:APPDATA\in.dsh-plug.dsh-launcher\homes\<version>\profiles\web"
-Copy-Item . "$profile\node_modules\dsh-escape-hatch" -Recurse
+npm run install:local                          # profile defaults to "web"
+npm run install:local -- --profile tui
 ```
 
-```yaml
-# 2. Register it in the profile's cordis.patch.yml
-- insert:
-    - id: escape-hatch
-      name: 'dsh-escape-hatch'
+One step runs the whole chain — rebuild `lib/` from `src/`, run every verification, pack a tarball, install it. Use it after every source change.
+
+### Manual
+
+```powershell
+# 1. Pack
+npm pack
+
+# 2. Install into the profile
+dsh plugin --profile web add "C:\path\to\dsh-escape-hatch-1.0.0.tgz"
 ```
 
-Restart the DSH web server and refresh the page.
+Then restart the DSH web server and refresh the page.
+
+### Do not edit the installed copy
+
+Fixing a bug by editing `profile\node_modules\dsh-escape-hatch\lib\...` **does not survive**. The next `dsh plugin install` or profile rebuild overwrites it and the fix silently disappears.
+
+The correct shape of this workflow is always:
+
+- fix the **source** (`src/`, or an upstream dependency),
+- rebuild and reinstall (`npm run install:local`),
+- or point the dependency at a locally patched source using `file:`.
+
+### Pin explicit versions
+
+Install with an explicit version. Do **not** leave a caret range (`^1.0.0`) — a range can lock out the very release that contains the fix, which is exactly how `^0.6.11` once kept a patched build out.
+
+Tag-based install:
+
+```powershell
+dsh plugin --profile web add https://gh-proxy.com/https://github.com/MYCF711/dsh-escape-hatch/releases/download/v1.0.0/dsh-escape-hatch-1.0.0.tgz
+```
+
+### If the install behaves strangely
+
+`pnpm` can crash on some profile configurations — observed on pnpm 12.4.2 with a hoisted linker and larger packages, aborting with `memory allocation of 21474836480 bytes failed`. After such a crash the three records below frequently end up contradicting each other while the exit code still looks clean.
+
+Check all three against each other:
+
+```powershell
+npm run diagnose
+```
+
+It compares the dependency declaration in `package.json`, the resolution entry in `pnpm-lock.yaml`, and what actually exists under `node_modules` — including whether the installed copy is a real directory or a symlink — then prints the exact repair sequence when they disagree.
 
 ### Activation requirement
 
@@ -184,8 +222,11 @@ The registration `id` is read from `package.json`, so the bundle stays in sync w
 │   └── index.js
 └── scripts/
     ├── bundle-client.mjs     # zero-dependency client bundler
+    ├── pack-and-install.mjs  # build → verify → pack → install, one step
+    ├── diagnose-install.mjs  # declaration / lockfile / node_modules reconciliation
     ├── verify-bundle.mjs     # 13 contract checks
-    └── verify-rescue.mjs     # 8 end-to-end behavior checks
+    ├── verify-rescue.mjs     # 8 end-to-end behavior checks
+    └── verify-install.mjs    # 15 installed-state checks
 ```
 
 `lib/` is committed on purpose: the runtime consumes built artifacts directly, and DSH has no install-time build step for plugins.

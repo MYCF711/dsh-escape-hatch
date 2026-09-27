@@ -1,7 +1,6 @@
 {
   "name": "dsh-escape-hatch",
   "version": "1.0.0",
-  "private": true,
   "type": "module",
   "description": "Keep your DSH UI alive when one plugin fails to boot — degrades the fatal boot screen into a dismissible warning.",
   "keywords": [
@@ -13,6 +12,21 @@
     "resilience"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-client-modules": "*"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-modules": {
+      "optional": true
+    }
+  },
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js"
@@ -29,7 +43,10 @@
   "scripts": {
     "build": "node scripts/bundle-client.mjs",
     "verify": "node scripts/verify-bundle.mjs && node scripts/verify-rescue.mjs",
-    "verify:install": "node scripts/verify-install.mjs"
+    "verify:install": "node scripts/verify-install.mjs",
+    "install:local": "node scripts/pack-and-install.mjs",
+    "diagnose": "node scripts/diagnose-install.mjs",
+    "prepack": "node scripts/bundle-client.mjs"
   },
   "dsh": {
     "bundle": {

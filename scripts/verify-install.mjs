@@ -9,7 +9,7 @@
  * 用法：node verify-install.mjs <profileDir>
  */
 
-import { readFileSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, existsSync, realpathSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import process from 'node:process';
@@ -62,7 +62,7 @@ check(
 );
 
 // ── 2. 宿主视角的清单 ──────────────────────────────────────────────
-check('插件目录存在（经符号链接）', autoInstalled, pkgDir);
+check('插件目录存在', autoInstalled, pkgDir);
 
 let pkg;
 try {
@@ -114,12 +114,17 @@ if (bundle !== null) {
   );
 }
 
-// ── 4. 链接形态 ────────────────────────────────────────────────────
+// ── 4. 安装形态 ────────────────────────────────────────────────────
+// 两种形态都合法，但语义不同，必须如实报出：
+//   实体目录 — 自包含，随 profile 迁移，推荐
+//   符号链接 — 指向源码目录，改源码即时生效，但换机/删源目录即失效
 try {
+  const st = statSync(pkgDir, { throwIfNoEntry: false });
+  const isLink = st !== undefined && (st.mode & 0o170000) === 0o120000;
   const real = realpathSync(pkgDir);
-  check('符号链接可解析', true, real);
+  check('安装形态已识别', true, isLink ? `符号链接 → ${real}` : '实体目录（自包含）');
 } catch (error) {
-  check('符号链接可解析', false, String(error));
+  check('安装形态已识别', false, String(error));
 }
 
 const failed = results.filter((r) => !r.ok);
