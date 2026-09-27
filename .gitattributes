@@ -1,0 +1,17 @@
+# Normalize line endings in the repository to LF.
+# Without this, Windows checkouts commit CRLF and produce whole-file diffs
+# for contributors on other platforms.
+* text=auto eol=lf
+
+# Explicitly binary — never touch these
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# GitHub language statistics: keep generated bundles out of the tally
+lib/*.js linguist-generated=true

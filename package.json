@@ -1,0 +1,42 @@
+{
+  "name": "dsh-escape-hatch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Keep your DSH UI alive when one plugin fails to boot — degrades the fatal boot screen into a dismissible warning.",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "boot",
+    "resilience"
+  ],
+  "license": "MIT",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js"
+  },
+  "files": [
+    "lib",
+    "src",
+    "scripts",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/bundle-client.mjs",
+    "verify": "node scripts/verify-bundle.mjs && node scripts/verify-rescue.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": []
+    }
+  }
+}
