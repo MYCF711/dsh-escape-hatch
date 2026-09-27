@@ -2,6 +2,8 @@
 
 > Keep your DSH UI alive when one plugin fails to boot.
 
+[简体中文](README.zh-CN.md) | **English**
+
 `dsh-escape-hatch` is a DSH (DeepSeek Harness) plugin that turns a fatal **"Failed to load plugins"** boot screen into a dismissible corner warning — the rest of the UI keeps working.
 
 One broken plugin should not take down the whole application.
@@ -207,4 +209,4 @@ No other state is modified.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 MYCF711
