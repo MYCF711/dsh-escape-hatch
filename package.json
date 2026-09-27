@@ -28,7 +28,8 @@
   ],
   "scripts": {
     "build": "node scripts/bundle-client.mjs",
-    "verify": "node scripts/verify-bundle.mjs && node scripts/verify-rescue.mjs"
+    "verify": "node scripts/verify-bundle.mjs && node scripts/verify-rescue.mjs",
+    "verify:install": "node scripts/verify-install.mjs"
   },
   "dsh": {
     "bundle": {
